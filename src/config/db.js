@@ -1,6 +1,6 @@
 /* Funcionalidades para la configuración de la Base de Datos */
 
-// Realiza la conexión con la Base de Datos "library"
+// Realiza la conexión con la Base de Datos "video-store"
 const connectToDataBase = async () => {
   // Permite cargar variables de entorno desde un archivo ".env"
   require('dotenv').config()

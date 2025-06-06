@@ -21,12 +21,9 @@ const preValidateUser = userSchema.pre('validate', function (next) {
 // Transformación de los datos de los usuarios después de su validación
 const postValidateUser = userSchema.post('validate', function () {
   // Eliminación de duplicados
-  if (validation.isNotEmptyArray(this.books)) {
-    this.books = validation.removeDuplicates(this.books)
+  if (validation.isNotEmptyArray(this.movies)) {
+    this.movies = validation.removeDuplicates(this.movies)
   }
 })
 
-module.exports = {
-  preValidateUser,
-  postValidateUser
-}
+module.exports = { preValidateUser, postValidateUser }

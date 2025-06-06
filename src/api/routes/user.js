@@ -28,14 +28,14 @@ userRouter.get(
   userController.getUsersByRole
 )
 userRouter.get(
-  '/get/book-id/:id',
+  '/get/movie-id/:id',
   isAuthorizedUser(ROLES.admin),
-  userController.getUsersByBookId
+  userController.getUsersByMovieId
 )
 userRouter.get(
-  '/get/book-title/:title',
+  '/get/movie-title/:title',
   isAuthorizedUser(ROLES.admin),
-  userController.getUsersByBookTitle
+  userController.getUsersByMovieTitle
 )
 userRouter.post('/login/', userController.loginUser)
 userRouter.post(

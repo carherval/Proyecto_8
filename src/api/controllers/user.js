@@ -4,7 +4,7 @@ const mongoose = require('mongoose')
 const { ROLES, User } = require('../models/user')
 const userCollectionName = User.collection.name
 const {
-  BOOK_COLLECTION_NAME: bookCollectionName,
+  MOVIE_COLLECTION_NAME: movieCollectionName,
   validation
 } = require('../../utils/validation')
 // Permite cifrar contraseñas y verificar su autenticidad de forma segura
@@ -14,21 +14,21 @@ const getUserNotFoundByIdMsg = (id) => {
   return `No se ha encontrado ningún usuario en la colección "${userCollectionName}" con el identificador "${id}"`
 }
 
-// Devuelve los usuarios mediante el identificador de uno de sus libros prestados
+// Devuelve los usuarios mediante el identificador de una de sus películas prestadas
 // Validador
-const getUsersByBookIdValidator = async (id) => {
-  return await User.find({ books: { $in: id } })
+const getUsersByMovieIdValidator = async (id) => {
+  return await User.find({ movies: { $in: id } })
 }
 
 // Devuelve el usuario que ha iniciado sesión
-// Se pueblan los libros prestados con su título y ordenados alfabéticamente por título
+// Se pueblan las películas prestadas con su título y ordenadas alfabéticamente por título
 const getUser = async (req, res, next) => {
   try {
     return res
       .status(200)
       .send(
-        validation.getDocumentWithSortedBooks(
-          await User.findOne(req.user).populate('books', 'title')
+        validation.getDocumentWithSortedMovies(
+          await User.findOne(req.user).populate('movies', 'title')
         )
       )
   } catch (error) {
@@ -39,11 +39,13 @@ const getUser = async (req, res, next) => {
 }
 
 // Devuelve todos los usuarios ordenados alfabéticamente por nombre de usuario
-// Se pueblan los libros prestados con su título y ordenados alfabéticamente por título
+// Se pueblan las películas prestadas con su título y ordenadas alfabéticamente por título
 const getAllUsers = async (req, res, next) => {
   try {
     const users = validation
-      .getDocumentsWithSortedBooks(await User.find().populate('books', 'title'))
+      .getDocumentsWithSortedMovies(
+        await User.find().populate('movies', 'title')
+      )
       .sort(validation.sortUsers)
 
     if (users.length > 0) {
@@ -63,7 +65,7 @@ const getAllUsers = async (req, res, next) => {
 }
 
 // Devuelve un usuario mediante su identificador
-// Se pueblan los libros prestados con su título y ordenados alfabéticamente por título
+// Se pueblan las películas prestadas con su título y ordenadas alfabéticamente por título
 const getUserById = async (req, res, next) => {
   const { id } = req.params
 
@@ -72,8 +74,8 @@ const getUserById = async (req, res, next) => {
       throw new Error(validation.INVALID_ID_MSG)
     }
 
-    const user = validation.getDocumentWithSortedBooks(
-      await User.findById(id).populate('books', 'title')
+    const user = validation.getDocumentWithSortedMovies(
+      await User.findById(id).populate('movies', 'title')
     )
 
     if (user != null) {
@@ -89,7 +91,7 @@ const getUserById = async (req, res, next) => {
 }
 
 // Devuelve los usuarios filtrados por nombre de usuario y ordenados alfabéticamente por nombre de usuario
-// Se pueblan los libros prestados con su título y ordenados alfabéticamente por título
+// Se pueblan las películas prestadas con su título y ordenadas alfabéticamente por título
 const getUsersByUserName = async (req, res, next) => {
   const userName = validation.getIgnoreAccentCaseText(
     validation.normalizeString(req.params.userName)
@@ -97,8 +99,8 @@ const getUsersByUserName = async (req, res, next) => {
 
   try {
     const users = validation
-      .getDocumentsWithSortedBooks(
-        await User.find({ userName }).populate('books', 'title')
+      .getDocumentsWithSortedMovies(
+        await User.find({ userName }).populate('movies', 'title')
       )
       .sort(validation.sortUsers)
 
@@ -123,7 +125,7 @@ const getUsersByUserName = async (req, res, next) => {
 }
 
 // Devuelve los usuarios filtrados por rol y ordenados alfabéticamente por nombre de usuario
-// Se pueblan los libros prestados con su título y ordenados alfabéticamente por título
+// Se pueblan las películas prestadas con su título y ordenadas alfabéticamente por título
 const getUsersByRole = async (req, res, next) => {
   const role = validation.getIgnoreAccentCaseText(
     validation.normalizeString(req.params.role)
@@ -131,8 +133,8 @@ const getUsersByRole = async (req, res, next) => {
 
   try {
     const users = validation
-      .getDocumentsWithSortedBooks(
-        await User.find({ role }).populate('books', 'title')
+      .getDocumentsWithSortedMovies(
+        await User.find({ role }).populate('movies', 'title')
       )
       .sort(validation.sortUsers)
 
@@ -156,9 +158,9 @@ const getUsersByRole = async (req, res, next) => {
   }
 }
 
-// Devuelve los usuarios filtrados por identificador de libro prestado y ordenados alfabéticamente por nombre de usuario
-// Se pueblan los libros prestados con su título y ordenados alfabéticamente por título
-const getUsersByBookId = async (req, res, next) => {
+// Devuelve los usuarios filtrados por identificador de película prestada y ordenados alfabéticamente por nombre de usuario
+// Se pueblan las películas prestadas con su título y ordenadas alfabéticamente por título
+const getUsersByMovieId = async (req, res, next) => {
   const { id } = req.params
 
   try {
@@ -166,8 +168,8 @@ const getUsersByBookId = async (req, res, next) => {
       throw new Error(validation.INVALID_ID_MSG)
     }
 
-    const users = validation.getDocumentsWithSortedBooks(
-      await User.find({ books: { $in: id } }).populate('books', 'title')
+    const users = validation.getDocumentsWithSortedMovies(
+      await User.find({ movies: { $in: id } }).populate('movies', 'title')
     )
 
     if (users.length > 0) {
@@ -176,29 +178,31 @@ const getUsersByBookId = async (req, res, next) => {
       return res
         .status(404)
         .send(
-          `No se han encontrado usuarios en la colección "${userCollectionName}" con el identificador "${id}" en alguno de sus libros prestados`
+          `No se han encontrado usuarios en la colección "${userCollectionName}" con el identificador "${id}" en alguna de sus películas prestadas`
         )
     }
   } catch (error) {
-    error.message = `Se ha producido un error al consultar en la colección "${userCollectionName}" los usuarios con el identificador "${id}" en alguno de sus libros prestados:${validation.LINE_BREAK}${error.message}`
+    error.message = `Se ha producido un error al consultar en la colección "${userCollectionName}" los usuarios con el identificador "${id}" en alguna de sus películas prestadas:${validation.LINE_BREAK}${error.message}`
     error.status = 500
     next(error)
   }
 }
 
-// Devuelve los usuarios filtrados por título de libro prestado y ordenados alfabéticamente por nombre de usuario
-// Se pueblan los libros prestados con su título y ordenados alfabéticamente por título
-const getUsersByBookTitle = async (req, res, next) => {
+// Devuelve los usuarios filtrados por título de película prestada y ordenados alfabéticamente por nombre de usuario
+// Se pueblan las películas prestadas con su título y ordenadas alfabéticamente por título
+const getUsersByMovieTitle = async (req, res, next) => {
   const title = validation.getIgnoreAccentCaseText(
     validation.normalizeString(req.params.title)
   )
 
   try {
     const users = validation
-      .getDocumentsWithSortedBooks(await User.find().populate('books', 'title'))
+      .getDocumentsWithSortedMovies(
+        await User.find().populate('movies', 'title')
+      )
       .filter((user) =>
-        user.books.some((book) =>
-          title.test(validation.getIgnoreAccentCaseText(book.title))
+        user.movies.some((movie) =>
+          title.test(validation.getIgnoreAccentCaseText(movie.title))
         )
       )
       .sort(validation.sortUsers)
@@ -209,13 +213,13 @@ const getUsersByBookTitle = async (req, res, next) => {
       return res
         .status(404)
         .send(
-          `No se han encontrado usuarios en la colección "${userCollectionName}" con algún libro prestado cuyo título contenga "${validation.normalizeSearchString(
+          `No se han encontrado usuarios en la colección "${userCollectionName}" con alguna película prestada cuyo título contenga "${validation.normalizeSearchString(
             title
           )}"`
         )
     }
   } catch (error) {
-    error.message = `Se ha producido un error al consultar en la colección "${userCollectionName}" los usuarios con algún libro prestado cuyo título contenga "${validation.normalizeSearchString(
+    error.message = `Se ha producido un error al consultar en la colección "${userCollectionName}" los usuarios con alguna película prestada cuyo título contenga "${validation.normalizeSearchString(
       title
     )}":${validation.LINE_BREAK}${error.message}`
     error.status = 500
@@ -262,7 +266,7 @@ const loginUser = async (req, res, next) => {
 }
 
 // Crea un usuario nuevo
-// Se pueblan los libros prestados con su título y ordenados alfabéticamente por título
+// Se pueblan las películas prestadas con su título y ordenadas alfabéticamente por título
 const createUser = async (req, res, next) => {
   try {
     // Se valida aquí y no en el "validate" del modelo porque, si no, en el modelo se validaría el "hash" del cifrado de la contraseña, no la contraseña
@@ -286,10 +290,10 @@ const createUser = async (req, res, next) => {
     }
 
     // Se comprueba aquí y no en el "middleware" "pre validate" porque cualquier tratamiento omite el error de "cast" y toma por valor el array vacío
-    if (req.body.books != null) {
-      req.body.books =
-        req.body.books.length > 0
-          ? validation.normalizeArray(req.body.books)
+    if (req.body.movies != null) {
+      req.body.movies =
+        req.body.movies.length > 0
+          ? validation.normalizeArray(req.body.movies)
           : []
     }
 
@@ -297,9 +301,9 @@ const createUser = async (req, res, next) => {
     return res
       .status(201)
       .send(
-        validation.getDocumentWithSortedBooks(
+        validation.getDocumentWithSortedMovies(
           await User.findById((await new User(req.body).save())._id).populate(
-            'books',
+            'movies',
             'title'
           )
         )
@@ -314,7 +318,7 @@ const createUser = async (req, res, next) => {
 }
 
 // Actualiza el usuario que ha iniciado sesión
-// Se pueblan los libros prestados con su título y ordenados alfabéticamente por título
+// Se pueblan las películas prestadas con su título y ordenadas alfabéticamente por título
 const updateUser = async (req, res, next) => {
   try {
     if (Object.keys(req.body).length === 0) {
@@ -327,16 +331,16 @@ const updateUser = async (req, res, next) => {
     // Es necesario leer el campo oculto de la contraseña
     let updatedUser = new User(await User.findOne(req.user).select('+password'))
 
-    const { userName, password, email, role, books } = req.body
+    const { userName, password, email, role, movies } = req.body
 
     // Se valida aquí y no en el "validate" del modelo porque, si no, en el modelo se validaría el "hash" del cifrado de la contraseña, no la contraseña
     if (password != null && !validation.isPassword(password)) {
       throw new Error(validation.INVALID_PASSWORD_MSG)
     }
 
-    if ((role != null || books != null) && req.user.role === ROLES.user) {
+    if ((role != null || movies != null) && req.user.role === ROLES.user) {
       throw new Error(
-        `El rol y los libros prestados sólo pueden ser actualizados por un usuario "${ROLES.admin}"`
+        `El rol y las películas prestadas sólo pueden ser actualizados por un usuario "${ROLES.admin}"`
       )
     }
 
@@ -348,19 +352,19 @@ const updateUser = async (req, res, next) => {
     updatedUser.email = email ?? updatedUser.email
     updatedUser.role = role ?? updatedUser.role
 
-    // Se comprueba aquí y no en el "middleware" "pre validate" porque cualquier tratamiento omite el error de "cast" y toma por valor el array de libros prestados almacenado anteriormente en el usuario que ha iniciado sesión
-    if (books != null) {
-      updatedUser.books =
-        books.length > 0 ? validation.normalizeArray(books) : []
+    // Se comprueba aquí y no en el "middleware" "pre validate" porque cualquier tratamiento omite el error de "cast" y toma por valor el array de películas prestadas almacenado anteriormente en el usuario que ha iniciado sesión
+    if (movies != null) {
+      updatedUser.movies =
+        movies.length > 0 ? validation.normalizeArray(movies) : []
     }
 
     // Sólo se permite la población de campos en funciones de búsqueda
     return res
       .status(201)
       .send(
-        validation.getDocumentWithSortedBooks(
+        validation.getDocumentWithSortedMovies(
           await User.findById((await updatedUser.save())._id).populate(
-            'books',
+            'movies',
             'title'
           )
         )
@@ -375,7 +379,7 @@ const updateUser = async (req, res, next) => {
 }
 
 // Actualiza un usuario existente mediante su identificador
-// Se pueblan los libros prestados con su título y ordenados alfabéticamente por título
+// Se pueblan las películas prestadas con su título y ordenadas alfabéticamente por título
 const updateUserById = async (req, res, next) => {
   const { id } = req.params
 
@@ -400,7 +404,7 @@ const updateUserById = async (req, res, next) => {
     // Se obtiene la información del usuario a actualizar y se sustituye por la introducida por el usuario
     let updatedUser = new User(user)
 
-    const { userName, password, email, role, books } = req.body
+    const { userName, password, email, role, movies } = req.body
 
     // Se valida aquí y no en el "validate" del modelo porque, si no, en el modelo se validaría el "hash" del cifrado de la contraseña, no la contraseña
     if (password != null && !validation.isPassword(password)) {
@@ -415,19 +419,19 @@ const updateUserById = async (req, res, next) => {
     updatedUser.email = email ?? updatedUser.email
     updatedUser.role = role ?? updatedUser.role
 
-    // Se comprueba aquí y no en el "middleware" "pre validate" porque cualquier tratamiento omite el error de "cast" y toma por valor el array de libros prestados almacenado anteriormente en el usuario
-    if (books != null) {
-      updatedUser.books =
-        books.length > 0 ? validation.normalizeArray(books) : []
+    // Se comprueba aquí y no en el "middleware" "pre validate" porque cualquier tratamiento omite el error de "cast" y toma por valor el array de películas prestadas almacenado anteriormente en el usuario
+    if (movies != null) {
+      updatedUser.movies =
+        movies.length > 0 ? validation.normalizeArray(movies) : []
     }
 
     // Sólo se permite la población de campos en funciones de búsqueda
     return res
       .status(201)
       .send(
-        validation.getDocumentWithSortedBooks(
+        validation.getDocumentWithSortedMovies(
           await User.findById((await updatedUser.save())._id).populate(
-            'books',
+            'movies',
             'title'
           )
         )
@@ -450,9 +454,9 @@ const deleteUser = async (req, res, next) => {
       )
     }
 
-    if (req.user.books.length > 0) {
+    if (req.user.movies.length > 0) {
       throw new Error(
-        `Tu usuario no se puede eliminar porque tienes libros actualmente prestados en la colección "${bookCollectionName}"`
+        `Tu usuario no se puede eliminar porque tienes películas actualmente prestadas en la colección "${movieCollectionName}"`
       )
     }
 
@@ -491,9 +495,9 @@ const deleteUserById = async (req, res, next) => {
       )
     }
 
-    if (user.books.length > 0) {
+    if (user.movies.length > 0) {
       throw new Error(
-        `El usuario con el identificador "${id}" no se puede eliminar porque tiene libros actualmente prestados en la colección "${bookCollectionName}"`
+        `El usuario con el identificador "${id}" no se puede eliminar porque tiene películas actualmente prestadas en la colección "${movieCollectionName}"`
       )
     }
 
@@ -517,8 +521,8 @@ const userController = {
   getUserById,
   getUsersByUserName,
   getUsersByRole,
-  getUsersByBookId,
-  getUsersByBookTitle,
+  getUsersByMovieId,
+  getUsersByMovieTitle,
   loginUser,
   createUser,
   updateUser,
@@ -527,4 +531,4 @@ const userController = {
   deleteUserById
 }
 
-module.exports = { getUsersByBookIdValidator, userController }
+module.exports = { getUsersByMovieIdValidator, userController }

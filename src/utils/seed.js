@@ -1,13 +1,13 @@
-/* Semilla de datos de libros y autores */
+/* Semilla de datos de películas y directores */
 
 const mongoose = require('mongoose')
-const { Book } = require('../api/models/book')
-const bookCollectionName = Book.collection.name
-const { Author } = require('../api/models/author')
-const authorCollectionName = Author.collection.name
+const { Movie } = require('../api/models/movie')
+const movieCollectionName = Movie.collection.name
+const { Director } = require('../api/models/director')
+const directorCollectionName = Director.collection.name
 const { validation } = require('./validation')
 
-// Crea los libros y los autores en ambas colecciones
+// Crea las películas y los directores en ambas colecciones
 const createData = async () => {
   // Permite cargar variables de entorno desde un archivo ".env"
   require('dotenv').config()
@@ -16,7 +16,7 @@ const createData = async () => {
 
   try {
     console.log(
-      `Se van a generar los datos en la colecciones "${bookCollectionName}" y "${authorCollectionName}"`
+      `Se van a generar los datos en la colecciones "${movieCollectionName}" y "${directorCollectionName}"`
     )
 
     await mongoose.connect(dbUrl)
@@ -24,14 +24,14 @@ const createData = async () => {
       `Conexión con la Base de Datos "${dbName}" realizada correctamente`
     )
 
-    await Author.collection.drop()
+    await Director.collection.drop()
     console.log(
-      `Se han eliminado los datos antiguos en la colección "${authorCollectionName}"`
+      `Se han eliminado los datos antiguos en la colección "${directorCollectionName}"`
     )
 
-    await Book.collection.drop()
+    await Movie.collection.drop()
     console.log(
-      `Se han eliminado los datos antiguos en la colección "${bookCollectionName}"`
+      `Se han eliminado los datos antiguos en la colección "${movieCollectionName}"`
     )
 
     const { User } = require('../api/models/user')
@@ -42,85 +42,88 @@ const createData = async () => {
       const users = await User.find().select('+password')
 
       for (const user of users) {
-        user.books = []
-        // Se actualiza el usuario
-        await new User(user).save()
-      }
-
-      console.log(
-        `Se han eliminado los libros prestados a los usuarios en la colección "${userCollectionName}"`
-      )
-    } catch (error) {
-      throw new Error(
-        `Se ha producido un error durante la eliminación de los libros prestados a los usuarios en la colección "${userCollectionName}":${validation.CONSOLE_LINE_BREAK}${error}`
-      )
-    }
-
-    try {
-      const { books } = require('../data/book')
-
-      await Book.insertMany(books)
-      console.log(
-        `Se han creado los nuevos datos en la colección "${bookCollectionName}"`
-      )
-    } catch (error) {
-      throw new Error(
-        `Se ha producido un error durante la carga de los datos en la colección "${bookCollectionName}":${validation.CONSOLE_LINE_BREAK}${error}`
-      )
-    }
-
-    try {
-      const { authors } = require('../data/author')
-
-      // Los datos de cada autor hacen referencia al título de sus libros
-      // Se hace la búsqueda por título de cada libro y se asocia su identificador al autor
-      for (const author of authors) {
-        if (author.books.length > 0) {
-          author.books = await Promise.all(
-            validation.normalizeArray(author.books).map(async (title) => {
-              const book = await Book.findOne({
-                title: validation.normalizeString(title)
-              })
-
-              return book != null ? book._id : null
-            })
-          )
-
-          // Se comprueba si algún libro no existe en la colección
-          if (author.books.some((id) => id == null)) {
-            throw new Error(
-              validation.getBookDoesNotExistMsg(bookCollectionName)
-            )
-          }
-        } else {
-          author.books = []
+        if (user.movies.length > 0) {
+          user.movies = []
+          // Se actualiza el usuario
+          await new User(user).save()
         }
       }
 
-      // Se eliminan los posibles duplicados del array de libros de cada autor y se concatenan en un mismo array
-      const books = authors.reduce(
-        (acc, author) => acc.concat(validation.removeDuplicates(author.books)),
+      console.log(
+        `Se han eliminado las películas prestadas a los usuarios en la colección "${userCollectionName}"`
+      )
+    } catch (error) {
+      throw new Error(
+        `Se ha producido un error durante la eliminación de las películas prestadas a los usuarios en la colección "${userCollectionName}":${validation.CONSOLE_LINE_BREAK}${error}`
+      )
+    }
+
+    try {
+      const { movies } = require('../data/movie')
+
+      await Movie.insertMany(movies)
+      console.log(
+        `Se han creado los nuevos datos en la colección "${movieCollectionName}"`
+      )
+    } catch (error) {
+      throw new Error(
+        `Se ha producido un error durante la carga de los datos en la colección "${movieCollectionName}":${validation.CONSOLE_LINE_BREAK}${error}`
+      )
+    }
+
+    try {
+      const { directors } = require('../data/director')
+
+      // Los datos de cada director hacen referencia al título de sus películas
+      // Se hace la búsqueda por título de cada película y se asocia su identificador al director
+      for (const director of directors) {
+        if (director.movies.length > 0) {
+          director.movies = await Promise.all(
+            validation.normalizeArray(director.movies).map(async (title) => {
+              const movie = await Movie.findOne({
+                title: validation.normalizeString(title)
+              })
+
+              return movie != null ? movie._id : null
+            })
+          )
+
+          // Se comprueba si alguna película no existe en la colección
+          if (director.movies.some((id) => id == null)) {
+            throw new Error(
+              validation.getMovieDoesNotExistMsg(movieCollectionName)
+            )
+          }
+        } else {
+          director.movies = []
+        }
+      }
+
+      // Se eliminan los posibles duplicados del array de películas de cada director y se concatenan en un mismo array
+      const movies = directors.reduce(
+        (acc, director) =>
+          acc.concat(validation.removeDuplicates(director.movies)),
         []
       )
 
-      // Se comprueba si algún libro ya pertenece a otro autor (eliminando los posibles duplicados del array resultante anterior)
-      // Al no existir ningún autor (ya que se insertan todos a la vez con "insertMany"), no se puede comprobar en la validación del modelo
-      if (books.length !== validation.removeDuplicates(books).length) {
+      // Se comprueba si alguna película ya pertenece a otro director (eliminando los posibles duplicados del array resultante anterior)
+      // Al no existir ningún director (ya que se insertan todos a la vez con "insertMany"), no se puede comprobar en la validación del modelo
+      if (movies.length !== validation.removeDuplicates(movies).length) {
         throw new Error(
-          validation.getBookWithAuthorMsg(
-            authorCollectionName,
+          validation.getMovieWithDirectorMsg(
+            directorCollectionName,
             validation.CONSOLE_LINE_BREAK
           )
         )
       }
 
-      await Author.insertMany(authors)
+      await Director.insertMany(directors)
       console.log(
-        `Se han creado los nuevos datos en la colección "${authorCollectionName}"`
+        `Se han creado los nuevos datos en la colección "${directorCollectionName}"`
       )
     } catch (error) {
       throw new Error(
-        `Se ha producido un error durante la carga de los datos en la colección "${authorCollectionName}":${validation.CONSOLE_LINE_BREAK}${error}`
+        `Se ha producido un error durante la carga de los datos en la colección "${directorCollectionName}":${validation.CONSOLE_LINE_BREAK}${error}`
       )
     }
   } catch (error) {

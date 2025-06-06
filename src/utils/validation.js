@@ -1,10 +1,10 @@
 /* Funcionalidades para validación */
 
-const BOOK_COLLECTION_NAME = 'book'
-const AUTHOR_COLLECTION_NAME = 'author'
+const MOVIE_COLLECTION_NAME = 'movie'
+const DIRECTOR_COLLECTION_NAME = 'director'
 const USER_COLLECTION_NAME = 'user'
 
-const MIN_YEAR = 1500
+const MIN_YEAR = 1900
 const MAX_NUM_COPIES = 5
 const PASSWORD_MIN_LENGTH = 8
 
@@ -12,12 +12,9 @@ const ADMIN_USER_NAME = 'admin'
 const MANDATORY_MSG = 'El campo es obligatorio y no puede estar vacío'
 const UNIQUE_MSG = 'El campo no puede estar repetido'
 const ALLOWED_VALUES_MSG = 'Valores válidos'
-const DATE_FORMAT_MSG = 'Formato correcto: dd/mm/yyyy'
+const INVALID_NUMBER_MSG = 'Número no válido'
 const YEAR_FORMAT_MSG = 'Formato correcto: yyyy'
 const INVALID_YEAR_MSG = `El año debe ser a partir de ${MIN_YEAR}`
-const INVALID_DATE_MSG = 'Fecha no válida'
-const INVALID_ISBN_MSG = 'ISBN no válido'
-const INVALID_NUMBER_MSG = 'Número no válido'
 const INVALID_NUM_COPIES_MSG = `El número de copias no debe ser superior a ${MAX_NUM_COPIES}`
 const INVALID_PASSWORD_MSG = `La contraseña tiene que estar formada por letras y números y tener una longitud mínima de ${PASSWORD_MIN_LENGTH}`
 const INVALID_EMAIL_MSG = 'Correo electrónico no válido'
@@ -31,20 +28,20 @@ const getLoginMsg = (role = '') => {
   } para poder acceder al "endpoint"`
 }
 
-const getBookDoesNotExistMsg = (collectionName) => {
-  return `Alguno de los libros no existe en la colección "${collectionName}"`
+const getMovieDoesNotExistMsg = (collectionName) => {
+  return `Alguna de las películas no existe en la colección "${collectionName}"`
 }
 
-const getBookWithAuthorMsg = (collectionName, lineBreak) => {
-  return `Alguno de los libros ya tiene relacionado un autor en la colección "${collectionName}"${lineBreak}Un libro sólo puede pertenecer a un autor`
+const getMovieWithDirectorMsg = (collectionName, lineBreak) => {
+  return `Alguna de las películas ya tiene relacionado un director en la colección "${collectionName}"${lineBreak}Una película sólo puede pertenecer a un director`
 }
 
 const getCopiesLessThanBorrowingsMsg = (collectionName1, collectionName2) => {
-  return `El número de copias del libro en la colección "${collectionName1}" no puede ser inferior al número de copias actualmente prestadas a los usuarios en la colección "${collectionName2}"`
+  return `El número de copias de la película en la colección "${collectionName1}" no puede ser inferior al número de copias actualmente prestadas a los usuarios en la colección "${collectionName2}"`
 }
 
 const getAllCopiesBorrowedMsg = (collectionName) => {
-  return `Alguno de los libros no se puede prestar porque no tiene copias o todas sus copias se encuentran actualmente prestadas a los usuarios en la colección "${collectionName}"`
+  return `Alguna de las películas no se puede prestar porque no tiene copias o todas sus copias se encuentran actualmente prestadas a los usuarios en la colección "${collectionName}"`
 }
 
 // Devuelve si un array existe y no está vacío
@@ -52,9 +49,9 @@ const isNotEmptyArray = (array) => {
   return array != null && array.length > 0
 }
 
-// Devuelve si una fecha tiene el formato correcto
-const isFormattedDate = (date) => {
-  return /^\d{2}\/\d{2}\/\d{4}$/.test(date)
+// Devuelve si un valor es numérico
+const isNumber = (value) => {
+  return /^\d{1,}$/.test(value)
 }
 
 // Devuelve si un año tiene el formato correcto
@@ -65,49 +62,6 @@ const isYear = (year) => {
 // Devuelve si un año es válido
 const isValidYear = (year) => {
   return parseInt(year, 10) >= MIN_YEAR
-}
-
-// Devuelve si el año de una fecha es válido
-const isValidDateYear = (date) => {
-  const [day, month, year] = date.split('/')
-
-  return isValidYear(year)
-}
-
-// Devuelve si un año es bisiesto
-const isLeapYear = (year) => {
-  return !isYear(year)
-    ? false
-    : year % 400 === 0
-    ? true
-    : year % 100 === 0
-    ? false
-    : year % 4 === 0
-}
-
-// Devuelve si una fecha es válida
-const isValidDate = (date) => {
-  const [day, month, year] = date.split('/').map((value) => parseInt(value, 10))
-
-  return month === 2 && (day < 29 || (day === 29 && isLeapYear(year)))
-    ? true
-    : day < 31 && month <= 12 && month !== 2
-    ? true
-    : day === 31 && [1, 3, 5, 7, 8, 10, 12].includes(month)
-    ? true
-    : false
-}
-
-// Devuelve si un ISBN es válido
-const isIsbn = (isbn) => {
-  return /^(?:ISBN(?:-1[03])?:?\s*)?(?=[-0-9 ]{13,17}$)(97[89][- ]?)?[0-9]{1,5}[- ]?[0-9]+[- ]?[0-9]+[- ]?[0-9X]$/i.test(
-    isbn
-  )
-}
-
-// Devuelve si un valor es numérico
-const isNumber = (value) => {
-  return /^\d{1,}$/.test(value)
 }
 
 // Devuelve si es un número de copias válido
@@ -130,17 +84,17 @@ const getObjectValues = (object, separator = ' - ') => {
   return Object.values(object).join(separator)
 }
 
-// Devuelve los libros ordenados alfabéticamente por título ignorando tildes, minúsculas y mayúsculas
-const sortBooks = (book1, book2) => {
-  return book1.title.localeCompare(book2.title, 'en', {
+// Devuelve las películas ordenadas alfabéticamente por título ignorando tildes, minúsculas y mayúsculas
+const sortMovies = (movie1, movie2) => {
+  return movie1.title.localeCompare(movie2.title, 'en', {
     sensitivity: 'base'
   })
 }
 
-// Devuelve los autores ordenados alfabéticamente por apellidos y nombre ignorando tildes, minúsculas y mayúsculas
-const sortAuthors = (author1, author2) => {
-  return `${author1.surnames}, ${author1.name}`.localeCompare(
-    `${author2.surnames}, ${author2.name}`,
+// Devuelve los directores ordenados alfabéticamente por apellidos y nombre ignorando tildes, minúsculas y mayúsculas
+const sortDirectors = (director1, director2) => {
+  return `${director1.surnames}, ${director1.name}`.localeCompare(
+    `${director2.surnames}, ${director2.name}`,
     'en',
     { sensitivity: 'base' }
   )
@@ -153,12 +107,12 @@ const sortUsers = (user1, user2) => {
   })
 }
 
-// Devuelve si los libros del array existen en la colección
-const booksExistInCollection = async (books) => {
-  const { Book } = require('../api/models/book')
+// Devuelve si las películas del array existen en la colección
+const moviesExistInCollection = async (movies) => {
+  const { Movie } = require('../api/models/movie')
 
-  for (const id of books) {
-    if ((await Book.findById(id)) == null) {
+  for (const id of movies) {
+    if ((await Movie.findById(id)) == null) {
       return false
     }
   }
@@ -166,12 +120,12 @@ const booksExistInCollection = async (books) => {
   return true
 }
 
-// Devuelve un documento con su lista de libros ordenados alfabéticamente por título y las fechas formateadas
-const getDocumentWithSortedBooks = (document) => {
+// Devuelve un documento con su lista de películas ordenadas alfabéticamente por título y las fechas formateadas
+const getDocumentWithSortedMovies = (document) => {
   if (document != null) {
     const moment = require('moment')
 
-    document.books.sort(sortBooks)
+    document.movies.sort(sortMovies)
     document = document.toObject()
     document.createdAt = moment(document.createdAt).format(
       'DD/MM/YYYY HH:mm:ss'
@@ -184,9 +138,9 @@ const getDocumentWithSortedBooks = (document) => {
   return document
 }
 
-// Devuelve los documentos con su lista de libros ordenados alfabéticamente por título y las fechas formateadas
-const getDocumentsWithSortedBooks = (documents) => {
-  return documents.map((document) => getDocumentWithSortedBooks(document))
+// Devuelve los documentos con su lista de películas ordenadas alfabéticamente por título y las fechas formateadas
+const getDocumentsWithSortedMovies = (documents) => {
+  return documents.map((document) => getDocumentWithSortedMovies(document))
 }
 
 // Devuelve una cadena normalizada
@@ -248,12 +202,9 @@ const validation = {
   MANDATORY_MSG,
   UNIQUE_MSG,
   ALLOWED_VALUES_MSG,
-  DATE_FORMAT_MSG,
+  INVALID_NUMBER_MSG,
   YEAR_FORMAT_MSG,
   INVALID_YEAR_MSG,
-  INVALID_DATE_MSG,
-  INVALID_ISBN_MSG,
-  INVALID_NUMBER_MSG,
   INVALID_NUM_COPIES_MSG,
   INVALID_PASSWORD_MSG,
   INVALID_EMAIL_MSG,
@@ -261,29 +212,24 @@ const validation = {
   LINE_BREAK,
   CONSOLE_LINE_BREAK,
   getLoginMsg,
-  getBookDoesNotExistMsg,
-  getBookWithAuthorMsg,
+  getMovieDoesNotExistMsg,
+  getMovieWithDirectorMsg,
   getCopiesLessThanBorrowingsMsg,
   getAllCopiesBorrowedMsg,
   isNotEmptyArray,
-  isFormattedDate,
+  isNumber,
   isYear,
   isValidYear,
-  isValidDateYear,
-  isLeapYear,
-  isValidDate,
-  isIsbn,
-  isNumber,
   isValidNumCopies,
   isPassword,
   isEmail,
   getObjectValues,
-  sortBooks,
-  sortAuthors,
+  sortMovies,
+  sortDirectors,
   sortUsers,
-  booksExistInCollection,
-  getDocumentWithSortedBooks,
-  getDocumentsWithSortedBooks,
+  moviesExistInCollection,
+  getDocumentWithSortedMovies,
+  getDocumentsWithSortedMovies,
   normalizeString,
   normalizeSearchString,
   normalizeUserName,
@@ -294,8 +240,8 @@ const validation = {
 }
 
 module.exports = {
-  BOOK_COLLECTION_NAME,
-  AUTHOR_COLLECTION_NAME,
+  MOVIE_COLLECTION_NAME,
+  DIRECTOR_COLLECTION_NAME,
   USER_COLLECTION_NAME,
   validation
 }

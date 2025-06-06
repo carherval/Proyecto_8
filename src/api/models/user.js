@@ -2,7 +2,7 @@
 
 const mongoose = require('mongoose')
 const {
-  BOOK_COLLECTION_NAME: bookCollectionName,
+  MOVIE_COLLECTION_NAME: movieCollectionName,
   USER_COLLECTION_NAME: userCollectionName,
   validation
 } = require('../../utils/validation')
@@ -49,32 +49,34 @@ const userSchema = new mongoose.Schema(
         }: ${validation.getObjectValues(ROLES)}`
       }
     },
-    books: {
-      ref: bookCollectionName,
+    movies: {
+      ref: movieCollectionName,
       type: [mongoose.Types.ObjectId],
       trim: true,
       validate: [
         {
-          validator: validation.booksExistInCollection,
-          message: validation.getBookDoesNotExistMsg(bookCollectionName)
+          validator: validation.moviesExistInCollection,
+          message: validation.getMovieDoesNotExistMsg(movieCollectionName)
         },
-        // Valida si los libros del array pueden ser prestados en función de las copias del libro y de sus copias actualmente prestadas a los usuarios
+        // Valida si las películas del array pueden ser prestadas en función de las copias de la película y de sus copias actualmente prestadas a los usuarios
         {
-          validator: async function (books) {
-            const { Book } = require('./book')
-            const { getUsersByBookIdValidator } = require('../controllers/user')
+          validator: async function (movies) {
+            const { Movie } = require('./movie')
+            const {
+              getUsersByMovieIdValidator
+            } = require('../controllers/user')
 
-            for (const id of books) {
-              const book = await Book.findById(id)
-              const users = await getUsersByBookIdValidator(id)
+            for (const id of movies) {
+              const movie = await Movie.findById(id)
+              const users = await getUsersByMovieIdValidator(id)
 
-              // Para poder prestar un libro, tiene que haber alguna copia del mismo que no está siendo actualmente prestada a los usuarios
+              // Para poder prestar una película, tiene que haber alguna copia de la misma que no está siendo actualmente prestada a los usuarios
               // No hay que tener en cuenta el identificador del propio usuario
               if (
-                book != null &&
+                movie != null &&
                 users.find((user) => user._id.toJSON() === this._id.toJSON()) ==
                   null &&
-                users.length >= book.numCopies
+                users.length >= movie.numCopies
               ) {
                 return false
               }

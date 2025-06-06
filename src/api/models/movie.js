@@ -1,31 +1,42 @@
-/* Modelo de datos de libros */
+/* Modelo de datos de películas */
 
 const mongoose = require('mongoose')
 const {
-  BOOK_COLLECTION_NAME: bookCollectionName,
+  MOVIE_COLLECTION_NAME: movieCollectionName,
   USER_COLLECTION_NAME: userCollectionName,
   validation
 } = require('../../utils/validation')
 
 // Géneros
 const GENRES = {
-  biography: 'Biografía',
+  action: 'Acción',
+  adventure: 'Aventura',
+  war: 'Bélica',
+  disaster: 'Catástrofe',
   sciFi: 'Ciencia ficción',
-  essay: 'Ensayo',
+  comedy: 'Comedia',
+  documentary: 'Documental',
+  drama: 'Drama',
   fantasy: 'Fantasía',
-  historical: 'Histórico',
-  informative: 'Informativo',
-  literature: 'Literatura infantil y juvenil',
-  mystery: 'Misterio y suspense',
-  narrative: 'Narrativa',
-  poetry: 'Poesía',
-  romance: 'Romance',
-  theater: 'Teatro',
-  fear: 'Terror'
+  historical: 'Histórica',
+  music: 'Musical',
+  crime: 'Policiaca',
+  thriller: 'Suspense',
+  fear: 'Terror',
+  western: 'Western'
+}
+
+// Clasificación por edad
+const AGE_RATING = {
+  0: 0,
+  7: 7,
+  12: 12,
+  16: 16,
+  18: 18
 }
 
 // Esquema
-const bookSchema = new mongoose.Schema(
+const movieSchema = new mongoose.Schema(
   {
     title: {
       type: String,
@@ -44,34 +55,43 @@ const bookSchema = new mongoose.Schema(
         }: ${validation.getObjectValues(GENRES)}`
       }
     },
-    isbn: {
-      type: String,
+    ageRating: {
+      type: Number,
       trim: true,
       required: [true, validation.MANDATORY_MSG],
       validate: {
-        validator: validation.isIsbn,
-        message: validation.INVALID_ISBN_MSG
+        validator: validation.isNumber,
+        message: validation.INVALID_NUMBER_MSG
       },
-      unique: [true, `isbn: ${validation.UNIQUE_MSG}`]
+      enum: {
+        values: Object.values(AGE_RATING),
+        message: `${
+          validation.ALLOWED_VALUES_MSG
+        }: ${validation.getObjectValues(AGE_RATING)}`
+      }
     },
-    publicationDate: {
+    releaseYear: {
       type: String,
       trim: true,
       required: [true, validation.MANDATORY_MSG],
       validate: [
         {
-          validator: validation.isFormattedDate,
-          message: validation.DATE_FORMAT_MSG
+          validator: validation.isYear,
+          message: validation.YEAR_FORMAT_MSG
         },
         {
-          validator: validation.isValidDateYear,
+          validator: validation.isValidYear,
           message: validation.INVALID_YEAR_MSG
-        },
-        {
-          validator: validation.isValidDate,
-          message: validation.INVALID_DATE_MSG
         }
       ]
+    },
+    minDuration: {
+      type: String,
+      trim: true,
+      validate: {
+        validator: validation.isNumber,
+        message: validation.INVALID_NUMBER_MSG
+      }
     },
     numCopies: {
       type: Number,
@@ -86,38 +106,42 @@ const bookSchema = new mongoose.Schema(
           validator: validation.isValidNumCopies,
           message: validation.INVALID_NUM_COPIES_MSG
         },
-        // Valida si las copias del libro no son inferiores a las copias actualmente prestadas a los usuarios
+        // Valida si las copias de la película no son inferiores a las copias actualmente prestadas a los usuarios
         {
           validator: async function (numCopies) {
             const { User } = require('./user')
 
             return (
               numCopies >=
-              (await User.find({ books: { $in: this._id } })).length
+              (await User.find({ movies: { $in: this._id } })).length
             )
           },
           message: validation.getCopiesLessThanBorrowingsMsg(
-            bookCollectionName,
+            movieCollectionName,
             userCollectionName
           )
         }
       ]
     },
-    abstract: { type: String, trim: true }
+    synopsis: { type: String, trim: true }
   },
   {
     timestamps: true
   }
 )
 
-module.exports = { bookSchema }
+module.exports = { movieSchema }
 
 // Middlewares
-const { preValidateBook } = require('../../middlewares/book')
-preValidateBook
+const { preValidateMovie } = require('../../middlewares/movie')
+preValidateMovie
 
-// Modelo, esquema y colección de los libros
+// Modelo, esquema y colección de las películas
 // Si no se especifica, por defecto, la colección es el plural del modelo
-const Book = mongoose.model(bookCollectionName, bookSchema, bookCollectionName)
+const Movie = mongoose.model(
+  movieCollectionName,
+  movieSchema,
+  movieCollectionName
+)
 
-module.exports = { GENRES, Book }
+module.exports = { GENRES, AGE_RATING, Movie }
