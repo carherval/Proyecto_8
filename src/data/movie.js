@@ -5,6 +5,7 @@ const { GENRES, AGE_RATING } = require('../api/models/movie')
 const movies = [
   {
     title: 'Aliens: el regreso',
+    poster: 'aliens.jpg',
     genre: GENRES.sciFi,
     ageRating: AGE_RATING[16],
     releaseYear: '1986',
@@ -15,6 +16,7 @@ const movies = [
   },
   {
     title: 'Titanic',
+    poster: 'titanic.jpg',
     genre: GENRES.drama,
     ageRating: AGE_RATING[12],
     releaseYear: '1997',
@@ -25,6 +27,7 @@ const movies = [
   },
   {
     title: 'Batman Begins',
+    poster: 'batman.jpg',
     genre: GENRES.action,
     ageRating: AGE_RATING[12],
     releaseYear: '2005',
@@ -35,6 +38,7 @@ const movies = [
   },
   {
     title: 'Interstellar',
+    poster: 'interstellar.jpg',
     genre: GENRES.sciFi,
     ageRating: AGE_RATING[12],
     releaseYear: '2014',
@@ -45,6 +49,7 @@ const movies = [
   },
   {
     title: 'Alien: el octavo pasajero',
+    poster: 'alien.jpg',
     genre: GENRES.sciFi,
     ageRating: AGE_RATING[16],
     releaseYear: '1979',
@@ -55,6 +60,7 @@ const movies = [
   },
   {
     title: 'Gladiator',
+    poster: 'gladiator.jpg',
     genre: GENRES.action,
     ageRating: AGE_RATING[16],
     releaseYear: '2000',
@@ -65,6 +71,7 @@ const movies = [
   },
   {
     title: 'El bosque',
+    poster: 'bosque.jpg',
     genre: GENRES.fear,
     ageRating: AGE_RATING[12],
     releaseYear: '2004',
@@ -75,6 +82,7 @@ const movies = [
   },
   {
     title: 'El sexto sentido',
+    poster: 'sentido.jpg',
     genre: GENRES.thriller,
     ageRating: AGE_RATING[16],
     releaseYear: '1999',
@@ -85,6 +93,7 @@ const movies = [
   },
   {
     title: 'Indiana Jones y el templo maldito',
+    poster: 'indiana.jpg',
     genre: GENRES.adventure,
     ageRating: AGE_RATING[12],
     releaseYear: '1984',
@@ -95,6 +104,7 @@ const movies = [
   },
   {
     title: 'La lista de Schindler',
+    poster: 'lista.jpg',
     genre: GENRES.historical,
     ageRating: AGE_RATING[16],
     releaseYear: '1993',

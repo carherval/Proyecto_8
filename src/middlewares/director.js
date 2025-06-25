@@ -1,7 +1,46 @@
 /* Middlewares de directores */
 
+const DIRECTOR_FOLDER_NAME = 'Directors'
+
+// Permite gestionar archivos en "cloudinary" mediante su API
+const cloudinary = require('cloudinary').v2
+// Permite gestionar archivos enviados a través de una solicitud HTTP (formulario HTML)
+const multer = require('multer')
+// Permite a "multer" almacenar archivos en "cloudinary"
+const { CloudinaryStorage } = require('multer-storage-cloudinary')
 const { directorSchema } = require('../api/models/director')
 const { validation } = require('../utils/validation')
+
+// Configuración del almacenamiento de las fotos de los directores
+const directorPhotoStorageConfig = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: DIRECTOR_FOLDER_NAME,
+    allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp']
+  }
+})
+
+// Subida de directores
+const uploadDirector = (req, res, next) => {
+  // Se pasa como parámetro el nombre del campo de la solicitud HTTP (formulario HTML) de tipo "file"
+  multer({ storage: directorPhotoStorageConfig }).single('photo')(
+    req,
+    res,
+    (error) => {
+      if (error != null || (req.file != null && req.file.path == null)) {
+        return res
+          .status(400)
+          .send(
+            `Se ha producido un error al subir la foto del director a "Cloudinary"${
+              error != null ? ':' + validation.LINE_BREAK + error.message : ''
+            }`
+          )
+      }
+
+      next()
+    }
+  )
+}
 
 // Transformación de los datos de los directores antes de su validación
 const preValidateDirector = directorSchema.pre('validate', function (next) {
@@ -43,4 +82,11 @@ const preSaveDirector = directorSchema.pre('save', async function (next) {
   next()
 })
 
-module.exports = { preValidateDirector, postValidateDirector, preSaveDirector }
+module.exports = {
+  DIRECTOR_FOLDER_NAME,
+  directorPhotoStorageConfig,
+  uploadDirector,
+  preValidateDirector,
+  postValidateDirector,
+  preSaveDirector
+}

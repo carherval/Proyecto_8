@@ -4,6 +4,8 @@
 const movieRouter = require('express').Router()
 const { movieController } = require('../controllers/movie')
 const { isAuthorizedUser } = require('../../middlewares/auth')
+const { isValidSize } = require('../../middlewares/file')
+const { uploadMovie } = require('../../middlewares/movie')
 const { ROLES } = require('../models/user')
 
 movieRouter.get('/get/all/', movieController.getAllMovies)
@@ -21,11 +23,15 @@ movieRouter.get(
 movieRouter.post(
   '/create/',
   isAuthorizedUser(ROLES.admin),
+  isValidSize,
+  uploadMovie,
   movieController.createMovie
 )
 movieRouter.put(
   '/update/id/:id',
   isAuthorizedUser(ROLES.admin),
+  isValidSize,
+  uploadMovie,
   movieController.updateMovieById
 )
 movieRouter.delete(

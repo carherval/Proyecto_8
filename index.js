@@ -7,6 +7,7 @@ const { directorRouter } = require('./src/api/routes/director')
 const { userRouter } = require('./src/api/routes/user')
 const { validation } = require('./src/utils/validation')
 const { connectToDataBase } = require('./src/config/db')
+const { connectToCloudinary } = require('./src/config/cloudinary')
 
 // Permite interpretar las solicitudes HTTP en formato JSON
 videoStore.use(express.json())
@@ -41,7 +42,9 @@ videoStore.use((error, req, res, next) => {
   return res.status(error.status).send(error.message)
 })
 
-videoStore.listen(PORT, () => {
+videoStore.listen(PORT, async () => {
   console.log(`Servidor express ejecutándose en "http://localhost:${PORT}"`)
-  connectToDataBase()
+
+  await connectToDataBase()
+  connectToCloudinary()
 })

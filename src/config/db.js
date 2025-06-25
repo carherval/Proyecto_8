@@ -19,7 +19,7 @@ const connectToDataBase = async () => {
     const { validation } = require('../utils/validation')
 
     console.log(
-      `Se ha producido un error al conectar con la Base de Datos "${dbName}":${validation.CONSOLE_LINE_BREAK}${error}`
+      `Se ha producido un error al conectar con la Base de Datos "${dbName}":${validation.CONSOLE_LINE_BREAK}${error.message}`
     )
   }
 }

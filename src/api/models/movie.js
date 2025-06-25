@@ -44,6 +44,11 @@ const movieSchema = new mongoose.Schema(
       required: [true, validation.MANDATORY_MSG],
       unique: [true, `title: ${validation.UNIQUE_MSG}`]
     },
+    poster: {
+      type: String,
+      trim: true,
+      unique: [true, `poster: ${validation.UNIQUE_MSG}`]
+    },
     genre: {
       type: String,
       trim: true,

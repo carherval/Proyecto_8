@@ -20,6 +20,11 @@ const directorSchema = new mongoose.Schema(
       trim: true,
       required: [true, validation.MANDATORY_MSG]
     },
+    photo: {
+      type: String,
+      trim: true,
+      unique: [true, `photo: ${validation.UNIQUE_MSG}`]
+    },
     birthYear: {
       type: String,
       trim: true,

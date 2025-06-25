@@ -4,6 +4,7 @@
 const userRouter = require('express').Router()
 const { userController } = require('../controllers/user')
 const { isAuthorizedUser } = require('../../middlewares/auth')
+const { uploadUser } = require('../../middlewares/user')
 const { ROLES } = require('../models/user')
 
 userRouter.get('/get/', isAuthorizedUser(), userController.getUser)
@@ -37,16 +38,23 @@ userRouter.get(
   isAuthorizedUser(ROLES.admin),
   userController.getUsersByMovieTitle
 )
-userRouter.post('/login/', userController.loginUser)
+userRouter.post('/login/', uploadUser, userController.loginUser)
 userRouter.post(
   '/create/',
   isAuthorizedUser(ROLES.admin),
+  uploadUser,
   userController.createUser
 )
-userRouter.put('/update/', isAuthorizedUser(), userController.updateUser)
+userRouter.put(
+  '/update/',
+  isAuthorizedUser(),
+  uploadUser,
+  userController.updateUser
+)
 userRouter.put(
   '/update/id/:id',
   isAuthorizedUser(ROLES.admin),
+  uploadUser,
   userController.updateUserById
 )
 userRouter.delete('/delete/', isAuthorizedUser(), userController.deleteUser)

@@ -1,6 +1,10 @@
 /* Semilla de datos de películas y directores */
 
+MAX_RESULTS = 500
+
 const mongoose = require('mongoose')
+// Permite gestionar archivos en "cloudinary" mediante su API
+const cloudinary = require('cloudinary').v2
 const { Movie } = require('../api/models/movie')
 const movieCollectionName = Movie.collection.name
 const { Director } = require('../api/models/director')
@@ -14,6 +18,9 @@ const createData = async () => {
   const dbUrl = process.env.DB_URL
   const dbName = dbUrl.substring(dbUrl.lastIndexOf('/') + 1, dbUrl.indexOf('?'))
 
+  const { MOVIE_FOLDER_NAME } = require('../middlewares/movie')
+  const { DIRECTOR_FOLDER_NAME } = require('../middlewares/director')
+
   try {
     console.log(
       `Se van a generar los datos en la colecciones "${movieCollectionName}" y "${directorCollectionName}"`
@@ -24,15 +31,66 @@ const createData = async () => {
       `Conexión con la Base de Datos "${dbName}" realizada correctamente`
     )
 
+    cloudinary.config({
+      cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+      api_key: process.env.CLOUDINARY_API_KEY,
+      api_secret: process.env.CLOUDINARY_API_SECRET
+    })
+    console.log('Conexión con "Cloudinary" realizada correctamente')
+
     await Director.collection.drop()
     console.log(
       `Se han eliminado los datos antiguos en la colección "${directorCollectionName}"`
     )
 
+    // Se eliminan las fotos de los directores de "cloudinary"
+    try {
+      await Promise.all(
+        (
+          await cloudinary.search
+            .expression(`folder:${DIRECTOR_FOLDER_NAME}`)
+            .max_results(MAX_RESULTS)
+            .execute()
+        ).resources.map((photo) => cloudinary.uploader.destroy(photo.public_id))
+      )
+
+      console.log(
+        'Se han eliminado las fotos de los directores de "Cloudinary"'
+      )
+    } catch (error) {
+      // console.log(error)
+      throw new Error(
+        `Se ha producido un error durante la eliminación de las fotos de los directores de "Cloudinary":${validation.CONSOLE_LINE_BREAK}${error.message}`
+      )
+    }
+
     await Movie.collection.drop()
     console.log(
       `Se han eliminado los datos antiguos en la colección "${movieCollectionName}"`
     )
+
+    // Se eliminan los carteles de las películas de "cloudinary"
+    try {
+      await Promise.all(
+        (
+          await cloudinary.search
+            .expression(`folder:${MOVIE_FOLDER_NAME}`)
+            .max_results(MAX_RESULTS)
+            .execute()
+        ).resources.map((poster) =>
+          cloudinary.uploader.destroy(poster.public_id)
+        )
+      )
+
+      console.log(
+        'Se han eliminado los carteles de las películas de "Cloudinary"'
+      )
+    } catch (error) {
+      // console.log(error)
+      throw new Error(
+        `Se ha producido un error durante la eliminación de los carteles de las películas de "Cloudinary":${validation.CONSOLE_LINE_BREAK}${error.message}`
+      )
+    }
 
     const { User } = require('../api/models/user')
     const userCollectionName = User.collection.name
@@ -53,21 +111,47 @@ const createData = async () => {
         `Se han eliminado las películas prestadas a los usuarios en la colección "${userCollectionName}"`
       )
     } catch (error) {
+      // console.log(error)
       throw new Error(
-        `Se ha producido un error durante la eliminación de las películas prestadas a los usuarios en la colección "${userCollectionName}":${validation.CONSOLE_LINE_BREAK}${error}`
+        `Se ha producido un error durante la eliminación de las películas prestadas a los usuarios en la colección "${userCollectionName}":${validation.CONSOLE_LINE_BREAK}${error.message}`
       )
     }
 
     try {
       const { movies } = require('../data/movie')
 
+      // Se actualizan las películas con la subida de sus carteles a "cloudinary"
+      try {
+        await Promise.all(
+          movies.map(async (movie) => {
+            // La ruta del archivo se indica desde el raíz del proyecto
+            movie.poster = (
+              await cloudinary.uploader.upload(
+                `./src/data/movies/${movie.poster}`,
+                { folder: MOVIE_FOLDER_NAME }
+              )
+            ).secure_url
+          })
+        )
+
+        console.log(
+          'Se han subido los carteles de las películas a "Cloudinary"'
+        )
+      } catch (error) {
+        // console.log(error)
+        throw new Error(
+          `Se ha producido un error durante la subida de los carteles de las películas a "Cloudinary":${validation.CONSOLE_LINE_BREAK}${error.message}`
+        )
+      }
+
       await Movie.insertMany(movies)
       console.log(
         `Se han creado los nuevos datos en la colección "${movieCollectionName}"`
       )
     } catch (error) {
+      // console.log(error)
       throw new Error(
-        `Se ha producido un error durante la carga de los datos en la colección "${movieCollectionName}":${validation.CONSOLE_LINE_BREAK}${error}`
+        `Se ha producido un error durante la carga de los datos en la colección "${movieCollectionName}":${validation.CONSOLE_LINE_BREAK}${error.message}`
       )
     }
 
@@ -117,20 +201,44 @@ const createData = async () => {
         )
       }
 
+      // Se actualizan los directores con la subida de sus fotos a "cloudinary"
+      try {
+        await Promise.all(
+          directors.map(async (director) => {
+            // La ruta del archivo se indica desde el raíz del proyecto
+            director.photo = (
+              await cloudinary.uploader.upload(
+                `./src/data/directors/${director.photo}`,
+                { folder: DIRECTOR_FOLDER_NAME }
+              )
+            ).secure_url
+          })
+        )
+
+        console.log('Se han subido las fotos de los directores a "Cloudinary"')
+      } catch (error) {
+        // console.log(error)
+        throw new Error(
+          `Se ha producido un error durante la subida de las fotos de los directores a "Cloudinary":${validation.CONSOLE_LINE_BREAK}${error.message}`
+        )
+      }
+
       await Director.insertMany(directors)
       console.log(
         `Se han creado los nuevos datos en la colección "${directorCollectionName}"`
       )
     } catch (error) {
+      // console.log(error)
       throw new Error(
-        `Se ha producido un error durante la carga de los datos en la colección "${directorCollectionName}":${validation.CONSOLE_LINE_BREAK}${error}`
+        `Se ha producido un error durante la carga de los datos en la colección "${directorCollectionName}":${validation.CONSOLE_LINE_BREAK}${error.message}`
       )
     }
   } catch (error) {
     console.log(
-      `Se ha producido un error durante la carga de los datos:${validation.CONSOLE_LINE_BREAK}${error}`
+      `Se ha producido un error durante la carga de los datos:${validation.CONSOLE_LINE_BREAK}${error.message}`
     )
   } finally {
+    // No existe la desconexión como tal de "cloudinary"
     await mongoose.disconnect()
     console.log(
       `Se ha realizado la desconexión con la Base de Datos "${dbName}"`

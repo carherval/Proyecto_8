@@ -6,6 +6,7 @@ const movieCollectionName = Movie.collection.name
 const { Director } = require('../models/director')
 const { validation } = require('../../utils/validation')
 const moment = require('moment')
+const { deleteFile } = require('../../utils/file')
 
 const getMovieNotFoundByIdMsg = (id) => {
   return `No se ha encontrado ningún película en la colección "${movieCollectionName}" con el identificador "${id}"`
@@ -225,14 +226,29 @@ const getMoviesByDirectorName = async (req, res, next) => {
 
 // Crea una película nueva
 const createMovie = async (req, res, next) => {
+  const isUploadedFile = req.file != null && req.file.path != null
+
   try {
+    const newMovie = new Movie(req.body)
+
+    if (isUploadedFile) {
+      newMovie.poster = req.file.path
+    }
+
     return res
       .status(201)
-      .send(await getMovieWithDirector(await new Movie(req.body).save()))
+      .send(await getMovieWithDirector(await newMovie.save()))
   } catch (error) {
-    error.message = `Se ha producido un error al crear la película en la colección "${movieCollectionName}":${
-      validation.LINE_BREAK
-    }${validation.formatErrorMsg(error.message)}`
+    const msg = `Se ha producido un error al crear la película en la colección "${movieCollectionName}"`
+
+    // Si falla el borrado del cartel de la película, ocupará espacio en "cloudinary"
+    if (isUploadedFile) {
+      deleteFile(req.file.path, msg)
+    }
+
+    error.message = `${msg}:${validation.LINE_BREAK}${validation.formatErrorMsg(
+      error.message
+    )}`
     error.status = 500
     next(error)
   }
@@ -241,6 +257,7 @@ const createMovie = async (req, res, next) => {
 // Actualiza una película existente mediante su identificador
 const updateMovieById = async (req, res, next) => {
   const { id } = req.params
+  const isUploadedFile = req.file != null && req.file.path != null
 
   try {
     if (!mongoose.isValidObjectId(id)) {
@@ -253,17 +270,33 @@ const updateMovieById = async (req, res, next) => {
       throw new Error(getMovieNotFoundByIdMsg(id))
     }
 
-    if (Object.keys(req.body).length === 0) {
+    if (Object.keys(req.body).length === 0 && req.file == null) {
       throw new Error(
         `No se ha introducido ningún dato para actualizar la película con el identificador "${id}"`
       )
     }
 
-    // Se obtiene la información de la película a actualizar y se sustituye por la introducida por el usuario
+    // Se obtiene la información de la película a actualizar
     let updatedMovie = new Movie(movie)
 
+    // Siempre que se actualiza el cartel de la película, se elimina el que esté subido a "cloudinary"
+    if (isUploadedFile || req.body.poster != null) {
+      const { getPublicIdCloudinary } = require('../../utils/file')
+
+      deleteFile(
+        updatedMovie.poster,
+        `Actualización en la colección "${movieCollectionName}" del cartel "${
+          isUploadedFile
+            ? getPublicIdCloudinary(req.file.path)
+            : req.body.poster
+        }" de la película con el identificador "${id}"`
+      )
+    }
+
+    // Se sustituye la información de la película a actualizar por la introducida por el usuario
     const {
       title,
+      poster,
       genre,
       ageRating,
       releaseYear,
@@ -273,6 +306,9 @@ const updateMovieById = async (req, res, next) => {
     } = req.body
 
     updatedMovie.title = title ?? updatedMovie.title
+    updatedMovie.poster = isUploadedFile
+      ? req.file.path
+      : poster ?? updatedMovie.poster
     updatedMovie.genre = genre ?? updatedMovie.genre
     updatedMovie.ageRating = ageRating ?? updatedMovie.ageRating
     updatedMovie.releaseYear = releaseYear ?? updatedMovie.releaseYear
@@ -284,9 +320,16 @@ const updateMovieById = async (req, res, next) => {
       .status(201)
       .send(await getMovieWithDirector(await updatedMovie.save()))
   } catch (error) {
-    error.message = `Se ha producido un error al actualizar en la colección "${movieCollectionName}" la película con el identificador "${id}":${
-      validation.LINE_BREAK
-    }${validation.formatErrorMsg(error.message)}`
+    const msg = `Se ha producido un error al actualizar en la colección "${movieCollectionName}" la película con el identificador "${id}"`
+
+    // Si falla el borrado del cartel de la película, ocupará espacio en "cloudinary"
+    if (isUploadedFile) {
+      deleteFile(req.file.path, msg)
+    }
+
+    error.message = `${msg}:${validation.LINE_BREAK}${validation.formatErrorMsg(
+      error.message
+    )}`
     error.status = 500
     next(error)
   }
@@ -347,14 +390,15 @@ const deleteMovieById = async (req, res, next) => {
       )
     }
 
+    const msg = `Se ha eliminado en la colección "${movieCollectionName}" la película con el identificador "${id}"`
+
+    // Se elimina el cartel de la película
+    deleteFile(movie.poster, msg)
+
     // Commit de la transacción
     await session.commitTransaction()
 
-    return res
-      .status(200)
-      .send(
-        `Se ha eliminado en la colección "${movieCollectionName}" la película con el identificador "${id}"${deletedMovieFromDirectorMsg}`
-      )
+    return res.status(200).send(msg + deletedMovieFromDirectorMsg)
   } catch (error) {
     // Rollback de la transacción
     await session.abortTransaction()

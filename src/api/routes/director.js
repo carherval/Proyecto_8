@@ -4,6 +4,8 @@
 const directorRouter = require('express').Router()
 const { directorController } = require('../controllers/director')
 const { isAuthorizedUser } = require('../../middlewares/auth')
+const { isValidSize } = require('../../middlewares/file')
+const { uploadDirector } = require('../../middlewares/director')
 const { ROLES } = require('../models/user')
 
 directorRouter.get('/get/all/', directorController.getAllDirectors)
@@ -17,11 +19,15 @@ directorRouter.get(
 directorRouter.post(
   '/create/',
   isAuthorizedUser(ROLES.admin),
+  isValidSize,
+  uploadDirector,
   directorController.createDirector
 )
 directorRouter.put(
   '/update/id/:id',
   isAuthorizedUser(ROLES.admin),
+  isValidSize,
+  uploadDirector,
   directorController.updateDirectorById
 )
 directorRouter.delete(

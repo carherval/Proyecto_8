@@ -1,7 +1,24 @@
 /* Middlewares de usuarios */
 
+// Permite gestionar archivos enviados a través de una solicitud HTTP (formulario HTML)
+const multer = require('multer')
 const { userSchema } = require('../api/models/user')
 const { validation } = require('../utils/validation')
+
+// Subida de usuarios
+const uploadUser = (req, res, next) => {
+  multer().none()(req, res, (error) => {
+    if (error != null) {
+      return res
+        .status(400)
+        .send(
+          `Se ha producido un error al subir el usuario:${validation.LINE_BREAK}${error.message}`
+        )
+    }
+
+    next()
+  })
+}
 
 // Transformación de los datos de los usuarios antes de su validación
 const preValidateUser = userSchema.pre('validate', function (next) {
@@ -26,4 +43,4 @@ const postValidateUser = userSchema.post('validate', function () {
   }
 })
 
-module.exports = { preValidateUser, postValidateUser }
+module.exports = { uploadUser, preValidateUser, postValidateUser }
