@@ -306,6 +306,7 @@ const updateDirectorById = async (req, res, next) => {
 }
 
 // Elimina un director existente mediante su identificador
+// Se usa una sesión y una transacción para almacenar varias operaciones
 const deleteDirectorById = async (req, res, next) => {
   const { id } = req.params
   // Inicio de la sesión

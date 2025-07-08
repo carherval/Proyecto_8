@@ -1,5 +1,10 @@
 /* Middlewares de archivos */
 
+// Permite gestionar archivos en "cloudinary" mediante su API
+const cloudinary = require('cloudinary').v2
+// Permite a "multer" almacenar archivos en "cloudinary"
+const { CloudinaryStorage } = require('multer-storage-cloudinary')
+
 // Devuelve si un archivo tiene un tamaño válido
 const isValidSize = (req, res, next) => {
   // MB
@@ -24,4 +29,14 @@ const isValidSize = (req, res, next) => {
   next()
 }
 
-module.exports = { isValidSize }
+// Configuración del almacenamiento
+const storageConfig = (folderName) =>
+  new CloudinaryStorage({
+    cloudinary,
+    params: {
+      folder: folderName,
+      allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp']
+    }
+  })
+
+module.exports = { isValidSize, storageConfig }
