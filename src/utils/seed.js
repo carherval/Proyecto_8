@@ -1,6 +1,6 @@
 /* Semilla de datos de películas y directores */
 
-MAX_RESULTS = 500
+const MAX_RESULTS = 500
 
 const mongoose = require('mongoose')
 // Permite gestionar archivos en "cloudinary" mediante su API

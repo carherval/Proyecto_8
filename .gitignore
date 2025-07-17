@@ -1,4 +1,4 @@
 /node_modules
 # data
-# seeds
+# seed.js
 .env

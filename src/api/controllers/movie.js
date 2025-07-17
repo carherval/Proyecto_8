@@ -150,9 +150,7 @@ const getMoviesByGenre = async (req, res, next) => {
 // Devuelve las películas filtradas por clasificación por edad y ordenadas alfabéticamente por título
 // Se añade a la información el nombre del director de la película
 const getMoviesByAgeRating = async (req, res, next) => {
-  const ageRating = validation.getIgnoreAccentCaseText(
-    validation.normalizeString(req.params.ageRating)
-  )
+  const ageRating = validation.normalizeString(req.params.ageRating)
 
   try {
     if (!validation.isNumber(ageRating)) {
@@ -171,15 +169,11 @@ const getMoviesByAgeRating = async (req, res, next) => {
       return res
         .status(404)
         .send(
-          `No se han encontrado películas en la colección "${movieCollectionName}" que cumplan con la clasificación por edad "${validation.normalizeSearchString(
-            ageRating
-          )}"`
+          `No se han encontrado películas en la colección "${movieCollectionName}" que cumplan con la clasificación por edad "${ageRating}"`
         )
     }
   } catch (error) {
-    error.message = `Se ha producido un error al consultar en la colección "${movieCollectionName}" las películas que cumplan con la clasificación por edad "${validation.normalizeSearchString(
-      ageRating
-    )}":${validation.LINE_BREAK}${error.message}`
+    error.message = `Se ha producido un error al consultar en la colección "${movieCollectionName}" las películas que cumplan con la clasificación por edad "${ageRating}":${validation.LINE_BREAK}${error.message}`
     error.status = 500
     next(error)
   }
