@@ -22,8 +22,7 @@ const directorSchema = new mongoose.Schema(
     },
     photo: {
       type: String,
-      trim: true,
-      unique: [true, `photo: ${validation.UNIQUE_MSG}`]
+      trim: true
     },
     birthYear: {
       type: String,
@@ -80,6 +79,18 @@ const directorSchema = new mongoose.Schema(
   },
   {
     timestamps: true
+  }
+)
+
+// Índices
+directorSchema.index(
+  { photo: 1 },
+  {
+    unique: true,
+    partialFilterExpression: {
+      // La restricción sólo salta cuando el campo no está vacío y está repetido
+      $and: [{ photo: { $type: 'string' } }, { photo: { $gt: '' } }]
+    }
   }
 )
 

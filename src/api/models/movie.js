@@ -46,8 +46,7 @@ const movieSchema = new mongoose.Schema(
     },
     poster: {
       type: String,
-      trim: true,
-      unique: [true, `poster: ${validation.UNIQUE_MSG}`]
+      trim: true
     },
     genre: {
       type: String,
@@ -132,6 +131,18 @@ const movieSchema = new mongoose.Schema(
   },
   {
     timestamps: true
+  }
+)
+
+// Índices
+movieSchema.index(
+  { poster: 1 },
+  {
+    unique: true,
+    partialFilterExpression: {
+      // La restricción sólo salta cuando el campo no está vacío y está repetido
+      $and: [{ poster: { $type: 'string' } }, { poster: { $gt: '' } }]
+    }
   }
 )
 
