@@ -1,6 +1,6 @@
 /* Middlewares de películas */
 
-const MOVIE_FOLDER_NAME = 'Movies'
+const MOVIE_FOLDER_NAME = 'Video-store/Movies'
 
 // Permite gestionar archivos enviados a través de una solicitud HTTP (formulario HTML)
 const multer = require('multer')

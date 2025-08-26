@@ -1,6 +1,6 @@
 /* Middlewares de directores */
 
-const DIRECTOR_FOLDER_NAME = 'Directors'
+const DIRECTOR_FOLDER_NAME = 'Video-store/Directors'
 
 // Permite gestionar archivos enviados a través de una solicitud HTTP (formulario HTML)
 const multer = require('multer')
