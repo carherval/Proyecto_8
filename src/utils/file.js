@@ -5,7 +5,7 @@ const cloudinary = require('cloudinary').v2
 
 // Devuelve el "public ID" de un archivo de "cloudinary"
 const getPublicIdCloudinary = (pathFile) => {
-  return `${pathFile.split('/').at(-2)}/${
+  return `${pathFile.split('/').at(-3)}/${pathFile.split('/').at(-2)}/${
     pathFile.split('/').at(-1).split('.')[0]
   }`
 }
